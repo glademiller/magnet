@@ -1,15 +1,8 @@
-# Magnet, a JSON schema generator
+# OpenAPI JSON schema generator
 
-[![Magnet on crates.io](https://img.shields.io/crates/v/magnet_schema.svg)](https://crates.io/crates/magnet_schema)
-[![Magnet on docs.rs](https://docs.rs/magnet_schema/badge.svg)](https://docs.rs/magnet_schema)
-[![Magnet Download](https://img.shields.io/crates/d/magnet_schema.svg)](https://crates.io/crates/magnet_schema)
-[![Magnet License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/H2CO3/magnet/blob/master/LICENSE.txt)
-[![Lines of Code](https://tokei.rs/b1/github/H2CO3/magnet)](https://github.com/Aaronepower/tokei)
-[![Twitter](https://img.shields.io/badge/twitter-@H2CO3_iOS-blue.svg?style=flat&colorB=64A5DE&label=Twitter)](http://twitter.com/H2CO3_iOS)
+This is a fork of magnet in order to provide a JSON Schema generator suitable for OpenAPI v3 specifications
 
-These two related crates, `magnet_derive` and `magnet_schema` help you define (and, in most cases, automatically derive) MongoDB-flavored [JSON schemas](https://docs.mongodb.com/manual/reference/operator/query/jsonSchema/#extensions) for your domain model types. Currently, the primary use case for this library is to make it easy to validate serializeable types when using [Avocado](https://docs.rs/avocado/) or the [MongoDB Rust driver](https://docs.rs/mongodb/).
-
-The defined `JsonSchema` trait defines a single function, `json_schema`, which should/will return a Bson `Document` that is a valid JSON schema describing the structure of the implementing type. Example:
+The defined `JsonSchema` trait defines a single function, `json_schema`, which should/will return a `serde_json::Value` that is a valid JSON schema describing the structure of the implementing type. Example:
 
 ```rust
 #[macro_use]
