@@ -1,10 +1,10 @@
-//! For the time being, `BsonSchema` can't be automatically derived for a `union`.
+//! For the time being, `JsonSchema` can't be automatically derived for a `union`.
 
-use syn::{ Attribute, DataUnion };
+use error::{Error, Result};
 use proc_macro2::TokenStream;
-use error::{ Error, Result };
+use syn::{Attribute, DataUnion};
 
-/// Implements `BsonSchema` for a `union`.
-pub fn impl_bson_schema_union(_: Vec<Attribute>, _: DataUnion) -> Result<TokenStream> {
-    Err(Error::new("`BsonSchema` can't be implemented for unions"))
+/// Implements `JsonSchema` for a `union`.
+pub fn impl_json_schema_union(_: Vec<Attribute>, _: DataUnion) -> Result<TokenStream> {
+    Err(Error::new("`JsonSchema` can't be implemented for unions"))
 }

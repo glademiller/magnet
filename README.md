@@ -9,26 +9,24 @@
 
 These two related crates, `magnet_derive` and `magnet_schema` help you define (and, in most cases, automatically derive) MongoDB-flavored [JSON schemas](https://docs.mongodb.com/manual/reference/operator/query/jsonSchema/#extensions) for your domain model types. Currently, the primary use case for this library is to make it easy to validate serializeable types when using [Avocado](https://docs.rs/avocado/) or the [MongoDB Rust driver](https://docs.rs/mongodb/).
 
-The defined `BsonSchema` trait defines a single function, `bson_schema`, which should/will return a Bson `Document` that is a valid JSON schema describing the structure of the implementing type. Example:
+The defined `JsonSchema` trait defines a single function, `json_schema`, which should/will return a Bson `Document` that is a valid JSON schema describing the structure of the implementing type. Example:
 
 ```rust
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
 #[macro_use]
-extern crate bson;
-#[macro_use]
 extern crate magnet_derive;
 extern crate magnet_schema;
 extern crate mongodb;
 
 use std::collections::HashSet;
-use magnet_schema::BsonSchema;
+use magnet_schema::JsonSchema;
 
 use mongodb::{ Client, ThreadedClient, CommandType };
 use mongodb::db::{ ThreadedDatabase };
 
-#[derive(BsonSchema)]
+#[derive(JsonSchema)]
 struct Person {
     name: String,
     nicknames: HashSet<String>,
@@ -36,7 +34,7 @@ struct Person {
     contact: Option<Contact>,
 }
 
-#[derive(BsonSchema, Serialize, Deserialize)]
+#[derive(JsonSchema, Serialize, Deserialize)]
 #[serde(tag = "type", content = "value")]
 enum Contact {
     Email(String),
@@ -44,11 +42,11 @@ enum Contact {
 }
 
 fn main() {
-    let schema = Person::bson_schema();
-    let spec = doc! {
+    let schema = Person::json_schema();
+    let spec = json! ({
         "create": "Person",
         "validator": { "$jsonSchema": schema },
-    };
+    });
     let client = Client::connect("localhost", 27017).expect("can't connect to mongod");
     let db = client.db("Example");
     db.command(spec, CommandType::CreateCollection, None).expect("network error");
@@ -62,7 +60,7 @@ For milestones and custom `#[attributes]`, please see the [documentation](https:
 
 ### v0.8.0
 
-* Implement `BsonSchema` for `VecDeque`, `BinaryHeap`, `LinkedList`, `Range`, `RangeInclusive`, and `PhantomData`
+* Implement `JsonSchema` for `VecDeque`, `BinaryHeap`, `LinkedList`, `Range`, `RangeInclusive`, and `PhantomData`
 * Add `Eq + Hash` and `Ord` bounds on map keys and set elements where appropriate
 
 ### v0.7.0
@@ -72,7 +70,7 @@ For milestones and custom `#[attributes]`, please see the [documentation](https:
 
 ### v0.6.0
 
-* `impl BsonSchema` for arrays of size 2<sup>N</sup> between 128 and 65536; and sizes 1.5 * 2<sup>N</sup> between 96 and 1536.
+* `impl JsonSchema` for arrays of size 2<sup>N</sup> between 128 and 65536; and sizes 1.5 * 2<sup>N</sup> between 96 and 1536.
 * Rewrite generics handling using `syn::Generics::split_for_impl`
 * Use scoped lints in `magnet_schema` as well
 
@@ -99,8 +97,8 @@ For milestones and custom `#[attributes]`, please see the [documentation](https:
 
 ### v0.3.2
 
-* `impl BsonSchema for Document`
-* `impl BsonSchema for ObjectId`
+* `impl JsonSchema for Document`
+* `impl JsonSchema for ObjectId`
 * Documentation improvements
 * Update dependencies
 
@@ -127,9 +125,9 @@ For milestones and custom `#[attributes]`, please see the [documentation](https:
 ### v0.1.4
 
 * Unit tests and a test suite have been added.
-* Bug fix: `Option::bson_schema()` didn't handle the `bsonType` field, so `Option<integer>` wasn't allowed to be `null`. This has been corrected.
+* Bug fix: `Option::json_schema()` didn't handle the `bsonType` field, so `Option<integer>` wasn't allowed to be `null`. This has been corrected.
 * Bug fix: every generated schema now uses `Bson::I64` for representing array lengths / collection counts
-* Enhancement: `impl BsonSchema for { HashMap, BTreeMap }` now has a less stringent trait bound on the key. It is now `Display` instead of `AsRef<str>`.
+* Enhancement: `impl JsonSchema for { HashMap, BTreeMap }` now has a less stringent trait bound on the key. It is now `Display` instead of `AsRef<str>`.
 
 ### v0.1.3
 

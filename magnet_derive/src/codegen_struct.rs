@@ -1,11 +1,11 @@
 //! Code generation for `struct`s.
 
-use syn::{ DataStruct, Attribute };
-use proc_macro2::TokenStream;
+use codegen_field::impl_json_schema_fields;
 use error::Result;
-use codegen_field::impl_bson_schema_fields;
+use proc_macro2::TokenStream;
+use syn::{Attribute, DataStruct};
 
-/// Implements `BsonSchema` for a `struct`.
-pub fn impl_bson_schema_struct(attrs: Vec<Attribute>, ast: DataStruct) -> Result<TokenStream> {
-    impl_bson_schema_fields(&attrs, ast.fields)
+/// Implements `JsonSchema` for a `struct`.
+pub fn impl_json_schema_struct(attrs: Vec<Attribute>, ast: DataStruct) -> Result<TokenStream> {
+    impl_json_schema_fields(&attrs, ast.fields)
 }

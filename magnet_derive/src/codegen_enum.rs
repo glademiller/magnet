@@ -1,16 +1,16 @@
 //! Code generation for `enum`s.
 
-use syn::{ Attribute, DataEnum, Variant, Fields };
-use proc_macro2::TokenStream;
-use error::{ Error, Result };
 use case::RenameRule;
-use tag::SerdeEnumTag;
 use codegen_field::*;
+use error::{Error, Result};
 use meta;
+use proc_macro2::TokenStream;
+use syn::{Attribute, DataEnum, Fields, Variant};
+use tag::SerdeEnumTag;
 
-/// Implements `BsonSchema` for an `enum`.
+/// Implements `JsonSchema` for an `enum`.
 /// TODO(H2CO3): implement me
-pub fn impl_bson_schema_enum(attrs: Vec<Attribute>, ast: DataEnum) -> Result<TokenStream> {
+pub fn impl_json_schema_enum(attrs: Vec<Attribute>, ast: DataEnum) -> Result<TokenStream> {
     let rename_all_str = meta::serde_name_value(&attrs, "rename_all")?;
     let rename_all: Option<RenameRule> = match rename_all_str {
         Some(s) => Some(meta::value_as_str(&s)?.parse()?),
@@ -18,21 +18,22 @@ pub fn impl_bson_schema_enum(attrs: Vec<Attribute>, ast: DataEnum) -> Result<Tok
     };
     let tagging = SerdeEnumTag::from_attrs(&attrs)?;
 
-    let variants: Vec<_> = ast.variants
+    let variants: Vec<_> = ast
+        .variants
         .into_iter()
         .map(|variant| variant_schema(variant, rename_all, &tagging))
         .collect::<Result<_>>()?;
 
     let tokens = quote! {
-        doc! {
+        json! ({
             "anyOf": [ #(#variants,)* ]
-        }
+        })
     };
 
     Ok(tokens)
 }
 
-/// Generates a `BsonSchema` for a single `enum` variant.
+/// Generates a `JsonSchema` for a single `enum` variant.
 fn variant_schema(
     variant: Variant,
     rename_all: Option<RenameRule>,
@@ -40,7 +41,7 @@ fn variant_schema(
 ) -> Result<TokenStream> {
     // check for renaming directive attribute
     if meta::magnet_name_value(&variant.attrs, "rename")?.is_some() {
-        return Err(Error::new("`#[magnet(rename = \"...\")]` no longer exists"))
+        return Err(Error::new("`#[magnet(rename = \"...\")]` no longer exists"));
     }
 
     let rename = meta::serde_name_value(&variant.attrs, "rename")?;
@@ -53,16 +54,12 @@ fn variant_schema(
     };
 
     match *tagging {
-        SerdeEnumTag::Untagged => {
-            impl_bson_schema_fields(&variant.attrs, variant.fields)
-        }
+        SerdeEnumTag::Untagged => impl_json_schema_fields(&variant.attrs, variant.fields),
         SerdeEnumTag::Adjacent {
-            ref tag, ref content
+            ref tag,
+            ref content,
         } => match variant.fields {
-            Fields::Unit => adjacently_tagged_unit_variant_schema(
-                &variant_name,
-                tag,
-            ),
+            Fields::Unit => adjacently_tagged_unit_variant_schema(&variant_name, tag),
             _ => adjacently_tagged_other_variant_schema(
                 &variant.attrs,
                 &variant_name,
@@ -72,10 +69,7 @@ fn variant_schema(
             ),
         },
         SerdeEnumTag::Internal(ref tag) => match variant.fields {
-            Fields::Unit => internally_tagged_unit_variant_schema(
-                &variant_name,
-                tag,
-            ),
+            Fields::Unit => internally_tagged_unit_variant_schema(&variant_name, tag),
             _ => internally_tagged_other_variant_schema(
                 &variant.attrs,
                 &variant_name,
@@ -98,14 +92,14 @@ fn variant_schema(
 /// if the containing enum is adjacently tagged.
 fn adjacently_tagged_unit_variant_schema(variant_name: &str, tag: &str) -> Result<TokenStream> {
     let tokens = quote! {
-        doc! {
+        json! ({
             "type": "object",
             "additionalProperties": false,
             "required": [ #tag ],
             "properties": {
                 #tag: { "enum": [ #variant_name ] },
             },
-        }
+        })
     };
     Ok(tokens)
 }
@@ -119,9 +113,9 @@ fn adjacently_tagged_other_variant_schema(
     content: &str,
     fields: Fields,
 ) -> Result<TokenStream> {
-    let variant_schema = impl_bson_schema_fields(attrs, fields)?;
+    let variant_schema = impl_json_schema_fields(attrs, fields)?;
     let tokens = quote! {
-        doc! {
+        json! ({
             "type": "object",
             "additionalProperties": false,
             "required": [ #tag, #content ],
@@ -129,7 +123,7 @@ fn adjacently_tagged_other_variant_schema(
                 #tag: { "enum": [ #variant_name ] },
                 #content: #variant_schema,
             },
-        }
+        })
     };
     Ok(tokens)
 }
@@ -151,16 +145,16 @@ fn internally_tagged_other_variant_schema(
 ) -> Result<TokenStream> {
     let tag_extra = TagExtra { tag, variant };
 
-    impl_bson_schema_fields_extra(attrs, fields, tag_extra.into())
+    impl_json_schema_fields_extra(attrs, fields, tag_extra.into())
 }
 
 /// Generates a schema for a unit variant
 /// if the containing enum is externally tagged.
 fn externally_tagged_unit_variant_schema(variant_name: &str) -> Result<TokenStream> {
     let tokens = quote! {
-        doc! {
+        json! ({
             "enum": [ #variant_name ],
-        }
+        })
     };
     Ok(tokens)
 }
@@ -172,17 +166,17 @@ fn externally_tagged_other_variant_schema(
     variant_name: &str,
     fields: Fields,
 ) -> Result<TokenStream> {
-    let variant_schema = impl_bson_schema_fields(attrs, fields)?;
+    let variant_schema = impl_json_schema_fields(attrs, fields)?;
 
     let tokens = quote! {
-        doc! {
+        json! ({
             "type": "object",
             "additionalProperties": false,
             "required": [ #variant_name ],
             "properties": {
                 #variant_name: #variant_schema
             },
-        }
+        })
     };
     Ok(tokens)
 }

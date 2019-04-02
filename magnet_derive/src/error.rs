@@ -1,17 +1,17 @@
-//! Errors potentially happening while `#[derive]`ing `BsonSchema`.
+//! Errors potentially happening while `#[derive]`ing `JsonSchema`.
 
-use std::fmt;
 use std::error;
-use std::result;
+use std::fmt;
+use std::num::{ParseFloatError, ParseIntError};
 use std::ops::Deref;
+use std::result;
 use std::string::FromUtf8Error;
-use std::num::{ ParseIntError, ParseFloatError };
 use syn::synom::ParseError;
 
 /// Convenience type alias for a result that holds a `magnet_derive::Error` value.
 pub type Result<T> = result::Result<T, Error>;
 
-/// An error that potentially happens while `#[derive]`ing `BsonSchema`.
+/// An error that potentially happens while `#[derive]`ing `JsonSchema`.
 #[derive(Debug)]
 pub struct Error {
     /// The error message.
