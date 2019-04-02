@@ -690,6 +690,7 @@ impl JsonSchema for url::Url {
     fn json_schema() -> serde_json::Value {
         json! ({
             "type": "string",
+            "format": "uri",
             // TODO(H2CO3): validation regex pattern?
         })
     }
@@ -700,6 +701,7 @@ impl JsonSchema for uuid::Uuid {
     fn json_schema() -> serde_json::Value {
         json! ({
             "type": "string",
+            "format": "uuid4"
             "pattern": "^[[:xdigit:]]{8}-[[:xdigit:]]{4}-[[:xdigit:]]{4}-[[:xdigit:]]{4}-[[:xdigit:]]{12}$",
         })
     }
