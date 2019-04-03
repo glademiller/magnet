@@ -5,12 +5,12 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
-extern crate magnet_derive;
-extern crate magnet_schema;
+extern crate openapi_json_schema_derive;
+extern crate openapi_json_schema;
 #[macro_use]
 extern crate serde_json;
 
-use magnet_schema::JsonSchema;
+use openapi_json_schema::JsonSchema;
 use std::str;
 
 #[test]

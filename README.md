@@ -10,11 +10,11 @@ extern crate serde_derive;
 extern crate serde;
 #[macro_use]
 extern crate magnet_derive;
-extern crate magnet_schema;
+extern crate openapi_json_schema;
 extern crate mongodb;
 
 use std::collections::HashSet;
-use magnet_schema::JsonSchema;
+use openapi_json_schema::JsonSchema;
 
 use mongodb::{ Client, ThreadedClient, CommandType };
 use mongodb::db::{ ThreadedDatabase };
@@ -47,7 +47,7 @@ fn main() {
 }
 ```
 
-For milestones and custom `#[attributes]`, please see the [documentation](https://docs.rs/magnet_schema).
+For milestones and custom `#[attributes]`, please see the [documentation](https://docs.rs/openapi_json_schema).
 
 ## Release Notes
 
@@ -65,7 +65,7 @@ For milestones and custom `#[attributes]`, please see the [documentation](https:
 
 * `impl JsonSchema` for arrays of size 2<sup>N</sup> between 128 and 65536; and sizes 1.5 * 2<sup>N</sup> between 96 and 1536.
 * Rewrite generics handling using `syn::Generics::split_for_impl`
-* Use scoped lints in `magnet_schema` as well
+* Use scoped lints in `openapi_json_schema` as well
 
 ### v0.5.0
 

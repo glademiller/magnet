@@ -1,9 +1,9 @@
 //! Magnet, a JSON/BSON schema generator.
 //!
 //! This crate only contains the `#[derive(JsonSchema)]` proc-macro.
-//! For documentation, please see the [`magnet_schema`][1] crate.
+//! For documentation, please see the [`openapi_json_schema`][1] crate.
 //!
-//! [1]: https://docs.rs/magnet_schema
+//! [1]: https://docs.rs/openapi_json_schema
 
 #![crate_type = "proc-macro"]
 #![doc(html_root_url = "https://docs.rs/magnet_derive/0.8.0")]
@@ -96,7 +96,7 @@ fn impl_json_schema(input: TokenStream) -> Result<TokenStream> {
     let generics = parsed_ast.generics;
     let (impl_gen, ty_gen, where_cls) = generics.split_and_augment_for_impl();
     let generated = quote! {
-        impl #impl_gen ::magnet_schema::JsonSchema for #ty #ty_gen #where_cls {
+        impl #impl_gen ::openapi_json_schema::JsonSchema for #ty #ty_gen #where_cls {
             fn json_schema() -> serde_json::Value {
                 #impl_ast
             }

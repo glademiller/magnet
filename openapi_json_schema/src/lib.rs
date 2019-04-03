@@ -1,6 +1,6 @@
 //! # Magnet, a JSON/BSON schema generator
 //!
-//! These two related crates, `magnet_schema` and `magnet_derive` define
+//! These two related crates, `openapi_json_schema` and `magnet_derive` define
 //! a trait, `JsonSchema`, and a proc-macro derive for the same trait,
 //! which allows types to easily implement JSON schema validation for
 //! use with MongoDB.
@@ -24,11 +24,11 @@
 //! #[macro_use]
 //! extern crate serde_json;
 //! #[macro_use]
-//! extern crate magnet_derive;
-//! extern crate magnet_schema;
+//! extern crate openapi_json_schema_derive;
+//! extern crate openapi_json_schema;
 //!
 //! use std::collections::HashSet;
-//! use magnet_schema::JsonSchema;
+//! use openapi_json_schema::JsonSchema;
 //!
 //! #[derive(JsonSchema)]
 //! struct Person {
@@ -155,7 +155,7 @@
 //!     unlisted additional object fields are allowed provided that they
 //!     conform to the schema of the specified type.
 
-#![doc(html_root_url = "https://docs.rs/magnet_schema/0.8.0")]
+#![doc(html_root_url = "https://docs.rs/openapi_json_schema/0.8.0")]
 #![deny(
     missing_debug_implementations,
     missing_copy_implementations,
@@ -213,6 +213,7 @@ extern crate url;
 extern crate uuid;
 #[macro_use]
 extern crate serde_json;
+extern crate openapiv3;
 
 use std::borrow::Cow;
 use std::cell::{Cell, RefCell};
@@ -225,6 +226,7 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::sync::{Arc, Mutex, RwLock};
 use std::{i16, i32, i64, i8, isize, u16, u32, u64, u8, usize};
+use openapiv3::Schema;
 
 #[doc(hidden)]
 pub mod support;

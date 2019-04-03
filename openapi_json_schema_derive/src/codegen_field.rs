@@ -91,9 +91,9 @@ fn field_def(field: &Field) -> Result<TokenStream> {
     let upper = bounds_from_meta(max_incl, max_excl)?;
 
     Ok(quote! {
-        ::magnet_schema::support::extend_schema_with_bounds(
-            <#ty as ::magnet_schema::JsonSchema>::json_schema(),
-            ::magnet_schema::support::Bounds {
+        ::openapi_json_schema::support::extend_schema_with_bounds(
+            <#ty as ::openapi_json_schema::JsonSchema>::json_schema(),
+            ::openapi_json_schema::support::Bounds {
                 lower: #lower,
                 upper: #upper,
             },
@@ -114,17 +114,17 @@ fn bounds_from_meta(
         let value = meta::value_as_num(&nv)?;
 
         Ok(quote! {
-            ::magnet_schema::support::Bound::Inclusive(#value)
+            ::openapi_json_schema::support::Bound::Inclusive(#value)
         })
     } else if let Some(nv) = excl {
         let value = meta::value_as_num(&nv)?;
 
         Ok(quote! {
-            ::magnet_schema::support::Bound::Exclusive(#value)
+            ::openapi_json_schema::support::Bound::Exclusive(#value)
         })
     } else {
         Ok(quote! {
-            ::magnet_schema::support::Bound::Unbounded
+            ::openapi_json_schema::support::Bound::Unbounded
         })
     }
 }
@@ -181,7 +181,7 @@ fn impl_json_schema_indexed_fields(
                 let def = field_def(&field)?;
                 let tokens = if let Some(TagExtra { tag, variant }) = extra {
                     quote! {
-                        ::magnet_schema::support::extend_schema_with_tag(
+                        ::openapi_json_schema::support::extend_schema_with_tag(
                             #def,
                             #tag,
                             #variant,
@@ -212,5 +212,5 @@ fn impl_json_schema_indexed_fields(
 
 /// Implements `JsonSchema` for a unit `struct` or variant with no fields.
 fn impl_json_schema_unit_field() -> Result<TokenStream> {
-    Ok(quote! { <() as ::magnet_schema::JsonSchema>::json_schema() })
+    Ok(quote! { <() as ::openapi_json_schema::JsonSchema>::json_schema() })
 }

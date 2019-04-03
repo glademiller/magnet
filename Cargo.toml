@@ -1,2 +1,2 @@
 [workspace]
-members = ["magnet_schema", "magnet_derive"]
+members = ["openapi_json_schema", "openapi_json_schema_derive"]

@@ -49,7 +49,7 @@ fn json_schema_type_bounds() -> Punctuated<TypeParamBound, Add> {
             leading_colon: Colon2::default().into(),
             segments: vec![
                 PathSegment {
-                    ident: Ident::new("magnet_schema", Span::call_site()),
+                    ident: Ident::new("openapi_json_schema", Span::call_site()),
                     arguments: Default::default(),
                 },
                 PathSegment {
