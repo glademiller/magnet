@@ -28,67 +28,67 @@ pub struct Bounds {
 /// are to be made from `magnet_derive`'d, generated code only.
 #[doc(hidden)]
 pub fn extend_schema_with_bounds(
-    mut schema: serde_json::Value,
+    mut schema: openapiv3::Schema,
     bounds: Bounds,
-) -> serde_json::Value {
-    {
-        let obj = schema.as_object_mut().expect("Schema is not an object");
-        match bounds.lower {
-            Bound::Unbounded => {}
-            Bound::Inclusive(minimum) => {
-                obj.insert(
-                    "minimum".to_string(),
-                    serde_json::Value::Number(
-                        serde_json::Number::from_f64(minimum).expect("Not a number"),
-                    ),
-                );
-                obj.insert(
-                    "exclusiveMinimum".to_string(),
-                    serde_json::Value::Bool(false),
-                );
-            }
-            Bound::Exclusive(minimum) => {
-                obj.insert(
-                    "minimum".to_string(),
-                    serde_json::Value::Number(
-                        serde_json::Number::from_f64(minimum).expect("Not a number"),
-                    ),
-                );
-                obj.insert(
-                    "exclusiveMinimum".to_string(),
-                    serde_json::Value::Bool(true),
-                );
-            }
-        }
+) -> openapiv3::Schema {
+    // {
+    //     let obj = schema.as_object_mut().expect("Schema is not an object");
+    //     match bounds.lower {
+    //         Bound::Unbounded => {}
+    //         Bound::Inclusive(minimum) => {
+    //             obj.insert(
+    //                 "minimum".to_string(),
+    //                 serde_json::Value::Number(
+    //                     serde_json::Number::from_f64(minimum).expect("Not a number"),
+    //                 ),
+    //             );
+    //             obj.insert(
+    //                 "exclusiveMinimum".to_string(),
+    //                 serde_json::Value::Bool(false),
+    //             );
+    //         }
+    //         Bound::Exclusive(minimum) => {
+    //             obj.insert(
+    //                 "minimum".to_string(),
+    //                 serde_json::Value::Number(
+    //                     serde_json::Number::from_f64(minimum).expect("Not a number"),
+    //                 ),
+    //             );
+    //             obj.insert(
+    //                 "exclusiveMinimum".to_string(),
+    //                 serde_json::Value::Bool(true),
+    //             );
+    //         }
+    //     }
 
-        match bounds.upper {
-            Bound::Unbounded => {}
-            Bound::Inclusive(maximum) => {
-                obj.insert(
-                    "maximum".to_string(),
-                    serde_json::Value::Number(
-                        serde_json::Number::from_f64(maximum).expect("Not a number"),
-                    ),
-                );
-                obj.insert(
-                    "exclusiveMaximum".to_string(),
-                    serde_json::Value::Bool(false),
-                );
-            }
-            Bound::Exclusive(maximum) => {
-                obj.insert(
-                    "maximum".to_string(),
-                    serde_json::Value::Number(
-                        serde_json::Number::from_f64(maximum).expect("Not a number"),
-                    ),
-                );
-                obj.insert(
-                    "exclusiveMaximum".to_string(),
-                    serde_json::Value::Bool(true),
-                );
-            }
-        }
-    }
+    //     match bounds.upper {
+    //         Bound::Unbounded => {}
+    //         Bound::Inclusive(maximum) => {
+    //             obj.insert(
+    //                 "maximum".to_string(),
+    //                 serde_json::Value::Number(
+    //                     serde_json::Number::from_f64(maximum).expect("Not a number"),
+    //                 ),
+    //             );
+    //             obj.insert(
+    //                 "exclusiveMaximum".to_string(),
+    //                 serde_json::Value::Bool(false),
+    //             );
+    //         }
+    //         Bound::Exclusive(maximum) => {
+    //             obj.insert(
+    //                 "maximum".to_string(),
+    //                 serde_json::Value::Number(
+    //                     serde_json::Number::from_f64(maximum).expect("Not a number"),
+    //                 ),
+    //             );
+    //             obj.insert(
+    //                 "exclusiveMaximum".to_string(),
+    //                 serde_json::Value::Bool(true),
+    //             );
+    //         }
+    //     }
+    // }
 
     schema
 }
@@ -112,14 +112,20 @@ pub fn extend_schema_with_bounds(
 /// Every other case is considered an error.
 #[doc(hidden)]
 pub fn extend_schema_with_tag(
-    schema: serde_json::Value,
+    schema: openapiv3::Schema,
     tag: &str,
     variant: &str,
-) -> serde_json::Value {
-    if schema_is_struct(&schema) {
-        extend_struct_schema_with_tag(schema, tag, variant)
-    } else if schema_is_map(&schema) {
-        extend_map_schema_with_tag(schema, tag, variant)
+) -> openapiv3::Schema {
+    if schema_is_struct(&schema) || schema_is_map(&schema) {
+        if let openapiv3::Schema::Schema(item) = schema {
+            openapiv3::Schema::Schema(Box::new(extend_object_schema_with_tag(
+                (*item).clone(),
+                tag,
+                variant,
+            )))
+        } else {
+            panic!("This should be impossible we just checked with schema_is_struct")
+        }
     } else if schema_is_enum(&schema) {
         extend_enum_schema_with_tag(schema, tag, variant)
     } else {
@@ -131,103 +137,109 @@ pub fn extend_schema_with_tag(
 /// Note: we could check for `"type"` being an array containing `"object"`
 /// as well, in case it's an `Option`, but internally-tagged newtype variants
 /// around `Option` aren't supported by Serde anyway.
-fn schema_is_struct(doc: &serde_json::Value) -> bool {
-    doc.get("type")
-        .map(|v| {
-            if let serde_json::Value::String(v) = v {
-                v == "object"
-            } else {
-                false
-            }
-        })
-        .unwrap_or(false)
-        && doc.get("properties").is_some()
+fn schema_is_struct(doc: &openapiv3::Schema) -> bool {
+    if let openapiv3::Schema::Schema(item) = doc {
+        if let openapiv3::SchemaVariant::Object { .. } = **item {
+            return true;
+        }
+    }
+    false
 }
 
 /// Check if a schema holds a dynamic set of keys.
 /// Note: we could check for `"type"` being an array containing `"object"`
 /// as well, in case it's an `Option`, but internally-tagged newtype variants
 /// around `Option` aren't supported by Serde anyway.
-fn schema_is_map(doc: &serde_json::Value) -> bool {
-    doc.get("type")
-        .map(|v| {
-            if let serde_json::Value::String(v) = v {
-                v == "object"
-            } else {
-                false
-            }
-        })
-        .unwrap_or(false)
-        && doc.get("additionalProperties").is_some()
+fn schema_is_map(doc: &openapiv3::Schema) -> bool {
+    if let openapiv3::Schema::Schema(item) = doc {
+        if let openapiv3::SchemaVariant::Object {
+            additional_properties,
+            ..
+        } = **item
+        {
+            return additional_properties;
+        }
+    }
+    false
 }
 
 /// Check if a BSON schema describes an enum.
-fn schema_is_enum(doc: &serde_json::Value) -> bool {
-    doc.get("anyOf").map(|v| v.is_array()).unwrap_or(false)
+fn schema_is_enum(doc: &openapiv3::Schema) -> bool {
+    if let openapiv3::Schema::AnyOf { .. } = doc {
+        true
+    } else {
+        false
+    }
 }
 
 /// Extends a `struct`'s schema so that it describes an internally-tagged variant.
-fn extend_struct_schema_with_tag(
-    mut schema: serde_json::Value,
+fn extend_object_schema_with_tag(
+    mut schema: openapiv3::SchemaVariant,
     tag: &str,
     variant: &str,
-) -> serde_json::Value {
-    {
-        let obj = schema.as_object_mut().expect("Schema is not an object");
-        let mut required = match obj.remove("required") {
-            Some(serde_json::Value::Array(arr)) => arr,
-            Some(_) => panic!("`required` is not an array in struct obj?!"),
-            None => panic!("`required` key not found in struct obj?!"),
-        };
-        let mut properties = match obj.remove("properties") {
-            Some(serde_json::Value::Object(doc)) => doc,
-            Some(_) => panic!("`properties` is not a serde_json::Value in struct obj?!"),
-            None => panic!("`properties` key not found in struct obj?!"),
-        };
+) -> openapiv3::SchemaVariant {
+    match schema {
+        openapiv3::SchemaVariant::Object {
+            ref mut required,
+            ref mut properties,
+            ..
+        } => {
+            required.push(tag.into());
+            properties.insert(
+                tag.into(),
+                openapiv3::ReferenceOr::Item(Box::new(openapiv3::Schema::Schema(Box::new(
+                    openapiv3::SchemaVariant::String {
+                        schema_data: openapiv3::SchemaData {
+                            nullable: false,
+                            read_only: false,
+                            write_only: false,
+                            deprecated: false,
+                            external_docs: None,
+                            example: None,
+                            title: None,
+                            description: None,
+                        },
+                        pattern: None,
+                        format: openapiv3::VariantOrUnknownOrEmpty::Empty,
+                        enumeration: vec![variant.into()],
+                    },
+                )))),
+            );
+        }
+        _ => (),
+    };
 
-        // TODO(H2CO3): check for duplicate items and keys --
-        // however, Serde should catch them too, shouldn't it?
-        required.push(tag.into());
-        properties.insert(tag.to_string(), json!({ "enum": [variant] }));
-
-        obj.insert("required".to_string(), serde_json::Value::Array(required));
-        obj.insert(
-            "properties".to_string(),
-            serde_json::Value::Object(properties),
-        );
-    }
-    schema
-}
-
-/// Extends a map's schema so that it describes an internally-tagged variant.
-fn extend_map_schema_with_tag(
-    mut schema: serde_json::Value,
-    tag: &str,
-    variant: &str,
-) -> serde_json::Value {
-    {
-        let obj = schema.as_object_mut().expect("Schema is not an object");
-        // TODO(H2CO3): check for existence of the two following fields?
-        obj.insert(
-            "required".to_string(),
-            serde_json::Value::Array(vec![tag.into()]),
-        );
-        obj.insert(
-            "properties".to_string(),
-            json!({ tag: { "enum": [ variant ] } }),
-        );
-    }
     schema
 }
 
 /// Extends an `enum`'s schema so that it describes an internally-tagged variant.
 fn extend_enum_schema_with_tag(
-    _schema: serde_json::Value,
-    _tag: &str,
-    _variant: &str,
-) -> serde_json::Value {
-    // TODO(H2CO3): recursively and transitively walk `anyOf` / `oneOf`
-    // structure, until the leaves (struct or newtype-around-struct) are reached
-    // or an error occurs (a non struct or newtype-around-struct type is found).
-    unimplemented!("internally-tagged newtype variants around enums are not yet supported")
+    mut schema: openapiv3::Schema,
+    tag: &str,
+    variant: &str,
+) -> openapiv3::Schema {
+    match schema {
+        openapiv3::Schema::AnyOf { ref mut any_of } => {
+            for schema in any_of {
+                match schema {
+                    openapiv3::ReferenceOr::Item(ref mut schema) => {
+                        *schema = extend_schema_with_tag(schema.clone(), tag, variant);
+                    }
+                    _ => (),
+                }
+            }
+        }
+        openapiv3::Schema::OneOf { ref mut one_of } => {
+            for schema in one_of {
+                match schema {
+                    openapiv3::ReferenceOr::Item(ref mut schema) => {
+                        *schema = extend_schema_with_tag(schema.clone(), tag, variant);
+                    }
+                    _ => (),
+                }
+            }
+        }
+        _ => (),
+    }
+    schema
 }

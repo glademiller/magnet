@@ -215,6 +215,9 @@ extern crate uuid;
 extern crate serde_json;
 extern crate openapiv3;
 
+use openapiv3::{
+    IntegerFormat, ReferenceOr, Schema, SchemaData, SchemaVariant, VariantOrUnknownOrEmpty,
+};
 use std::borrow::Cow;
 use std::cell::{Cell, RefCell};
 use std::collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque};
@@ -226,7 +229,6 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::sync::{Arc, Mutex, RwLock};
 use std::{i16, i32, i64, i8, isize, u16, u32, u64, u8, usize};
-use openapiv3::Schema;
 
 #[doc(hidden)]
 pub mod support;
@@ -234,7 +236,7 @@ pub mod support;
 /// Types which can be expressed/validated by a MongoDB-flavored JSON schema.
 pub trait JsonSchema {
     /// Returns a BSON document describing the MongoDB-flavored schema of this type.
-    fn json_schema() -> serde_json::Value;
+    fn json_schema() -> Schema;
 }
 
 /////////////////////////////
@@ -242,8 +244,20 @@ pub trait JsonSchema {
 /////////////////////////////
 
 impl JsonSchema for bool {
-    fn json_schema() -> serde_json::Value {
-        json! ({ "type": "boolean" })
+    fn json_schema() -> Schema {
+        Schema::Schema(Box::new(SchemaVariant::Boolean {
+            schema_data: SchemaData {
+                nullable: false,
+                read_only: false,
+                write_only: false,
+                deprecated: false,
+                external_docs: None,
+                example: None,
+                title: None,
+                description: None,
+            },
+        }))
+        // json! ({ "type": "boolean" })
     }
 }
 
@@ -252,12 +266,31 @@ macro_rules! impl_json_schema_int {
         impl JsonSchema for $ty {
             #[allow(trivial_numeric_casts)]
             #[allow(clippy::cast_possible_wrap, clippy::cast_lossless)]
-            fn json_schema() -> serde_json::Value {
-                json! ({
-                    "format": $format,
-                    "minimum": $min as i64,
-                    "maximum": $max as i64,
-                })
+            fn json_schema() -> Schema {
+                Schema::Schema(Box::new(SchemaVariant::Integer {
+                    schema_data: SchemaData {
+                        nullable: false,
+                        read_only: false,
+                        write_only: false,
+                        deprecated: false,
+                        external_docs: None,
+                        example: None,
+                        title: None,
+                        description: None,
+                    },
+                    format: VariantOrUnknownOrEmpty::Unknown($format.to_string()),
+                    multiple_of: None,
+                    exclusive_minimum: false,
+                    exclusive_maximum: false,
+                    minimum: Some($min as i64),
+                    maximum: Some($max as i64),
+                    enumeration: vec![]
+                }))
+                // json! ({
+                //     "format": $format,
+                //     "minimum": $min as i64,
+                //     "maximum": $max as i64,
+                // })
             }
         }
     )*}
@@ -280,25 +313,63 @@ impl_json_schema_int! {
     target_pointer_width = "32"
 ))]
 impl JsonSchema for usize {
-    fn json_schema() -> serde_json::Value {
-        json! ({
-            "format": "int64",
-            "minimum": usize::MIN as i64,
-            "maximum": usize::MAX as i64,
-        })
+    fn json_schema() -> Schema {
+        Schema::Schema(Box::new(SchemaVariant::Integer {
+            schema_data: SchemaData {
+                nullable: false,
+                read_only: false,
+                write_only: false,
+                deprecated: false,
+                external_docs: None,
+                example: None,
+                title: None,
+                description: None,
+            },
+            format: VariantOrUnknownOrEmpty::Item(IntegerFormat::Int32),
+            multiple_of: None,
+            exclusive_minimum: false,
+            exclusive_maximum: false,
+            minimum: Some(usize::MIN as i32),
+            maximum: Some(usize::MAX as i32),
+            enumeration: vec![],
+        }))
+        // json! ({
+        //     "format": "int64",
+        //     "minimum": usize::MIN as i64,
+        //     "maximum":
+        // })
     }
 }
 
 /// Do **NOT** assume `sizeof(usize) <= sizeof(u64)`!!!
 #[cfg(target_pointer_width = "64")]
 impl JsonSchema for usize {
-    fn json_schema() -> serde_json::Value {
-        json! ({
+    fn json_schema() -> Schema {
+        Schema::Schema(Box::new(SchemaVariant::Integer {
+            schema_data: SchemaData {
+                nullable: false,
+                read_only: false,
+                write_only: false,
+                deprecated: false,
+                external_docs: None,
+                example: None,
+                title: None,
+                description: None,
+            },
+            format: VariantOrUnknownOrEmpty::Item(IntegerFormat::Int64),
+            multiple_of: None,
+            exclusive_minimum: false,
+            exclusive_maximum: false,
+            minimum: Some(usize::MIN as i64),
+            maximum: Some(usize::MAX as i64),
+            enumeration: vec![],
+        }))
+        // json! ({
 
-            "format": "int64",
-            "minimum": usize::MIN as i64,
-            "maximum": isize::MAX as i64,
-        })
+        //     "format": "int64",
+        //     "minimum": usize::MIN as i64,
+        //     "maximum": isize::MAX as i64,
+        // })
     }
 }
 
@@ -310,35 +381,88 @@ impl JsonSchema for usize {
     target_pointer_width = "64"
 ))]
 impl JsonSchema for isize {
-    fn json_schema() -> serde_json::Value {
-        json! ({
-            "format": "int64",
-            "minimum": isize::MIN as i64,
-            "maximum": isize::MAX as i64,
-        })
+    fn json_schema() -> Schema {
+        Schema::Schema(Box::new(SchemaVariant::Integer {
+            schema_data: SchemaData {
+                nullable: false,
+                read_only: false,
+                write_only: false,
+                deprecated: false,
+                external_docs: None,
+                example: None,
+                title: None,
+                description: None,
+            },
+            format: VariantOrUnknownOrEmpty::Item(IntegerFormat::Int64),
+            multiple_of: None,
+            exclusive_minimum: false,
+            exclusive_maximum: false,
+            minimum: Some(usize::MIN as i64),
+            maximum: Some(usize::MAX as i64),
+            enumeration: vec![],
+        }))
+        // json! ({
+        //     "format": "int64",
+        //     "minimum": isize::MIN as i64,
+        //     "maximum": isize::MAX as i64,
+        // })
     }
 }
 
 macro_rules! impl_json_schema_float {
     ($($ty:ident : $format:expr , $min:expr => $max:expr;)*) => {$(
         impl JsonSchema for $ty {
-            fn json_schema() -> serde_json::Value {
-                json!({ "type": "number", "format": $format, "minimum": $min, "maximum": $max })
+            fn json_schema() -> Schema {
+                Schema::Schema(Box::new(SchemaVariant::Number {
+                    schema_data: SchemaData {
+                        nullable: false,
+                        read_only: false,
+                        write_only: false,
+                        deprecated: false,
+                        external_docs: None,
+                        example: None,
+                        title: None,
+                        description: None,
+                    },
+                    format: VariantOrUnknownOrEmpty::Unknown($format.to_string()),
+                    multiple_of: None,
+                    exclusive_minimum: false,
+                    exclusive_maximum: false,
+                    minimum: Some($min),
+                    maximum: Some($max),
+                    enumeration: vec![]
+                }))
+                // json!({ "type": "number", "format": $format, "minimum": $min, "maximum": $max })
             }
         }
     )*}
 }
 
 impl_json_schema_float! {
-    f32: "float", std::f32::MIN => std::f32::MAX;
+    f32: "float", f64::from(std::f32::MIN) => f64::from(std::f32::MAX);
     f64: "double", std::f64::MIN => std::f64::MAX;
 }
 
 macro_rules! impl_json_schema_string {
     ($($ty:ty,)*) => {$(
         impl JsonSchema for $ty {
-            fn json_schema() -> serde_json::Value {
-                json!({ "type": "string" })
+            fn json_schema() -> Schema {
+                Schema::Schema(Box::new(SchemaVariant::String {
+                    schema_data: SchemaData {
+                        nullable: false,
+                        read_only: false,
+                        write_only: false,
+                        deprecated: false,
+                        external_docs: None,
+                        example: None,
+                        title: None,
+                        description: None,
+                    },
+                    pattern: None,
+                    format: VariantOrUnknownOrEmpty::Empty,
+                    enumeration: vec![]
+                }))
+
             }
         }
     )*}
@@ -362,7 +486,7 @@ impl<'a, T> JsonSchema for &'a T
 where
     T: ?Sized + JsonSchema,
 {
-    fn json_schema() -> serde_json::Value {
+    fn json_schema() -> Schema {
         T::json_schema()
     }
 }
@@ -371,7 +495,7 @@ impl<'a, T> JsonSchema for &'a mut T
 where
     T: ?Sized + JsonSchema,
 {
-    fn json_schema() -> serde_json::Value {
+    fn json_schema() -> Schema {
         T::json_schema()
     }
 }
@@ -381,11 +505,27 @@ impl<T> JsonSchema for [T]
 where
     T: JsonSchema,
 {
-    fn json_schema() -> serde_json::Value {
-        json! ({
-            "type": "array",
-            "items": T::json_schema(),
-        })
+    fn json_schema() -> Schema {
+        Schema::Schema(Box::new(SchemaVariant::Array {
+            schema_data: SchemaData {
+                nullable: false,
+                read_only: false,
+                write_only: false,
+                deprecated: false,
+                external_docs: None,
+                example: None,
+                title: None,
+                description: None,
+            },
+            items: ReferenceOr::Item(Box::new(T::json_schema())),
+            unique_items: false,
+            min_items: None,
+            max_items: None,
+        }))
+        // json! ({
+        //     "type": "array",
+        //     "items": T::json_schema(),
+        // })
     }
 }
 
@@ -393,13 +533,29 @@ macro_rules! impl_json_schema_array {
     ($($size:expr,)*) => {$(
         impl<T> JsonSchema for [T; $size] where T: JsonSchema {
             #[allow(trivial_numeric_casts)]
-            fn json_schema() -> serde_json::Value {
-                json! ({
-                    "type": "array",
-                    "minItems": $size as i64,
-                    "maxItems": $size as i64,
-                    "items": T::json_schema(),
-                })
+            fn json_schema() -> Schema {
+                Schema::Schema(Box::new(SchemaVariant::Array {
+                    schema_data: SchemaData {
+                        nullable: false,
+                        read_only: false,
+                        write_only: false,
+                        deprecated: false,
+                        external_docs: None,
+                        example: None,
+                        title: None,
+                        description: None,
+                    },
+                    items: ReferenceOr::Item(Box::new(T::json_schema())),
+                    unique_items: false,
+                    min_items: Some($size as usize), //@TODO  Fix this to use i64
+                    max_items: Some($size as usize)  //@TODO Fix this to use i64
+                }))
+                // json! ({
+                //     "type": "array",
+                //     "minItems": $size as i64,
+                //     "maxItems": $size as i64,
+                //     "items": T::json_schema(),
+                // })
             }
         }
     )*}
@@ -422,23 +578,68 @@ impl_json_schema_array! {
 }
 
 impl JsonSchema for () {
-    fn json_schema() -> serde_json::Value {
-        json! ({
-            "type": ["array", "null"],
-            "maxItems": 0_i64,
-        })
+    fn json_schema() -> Schema {
+        Schema::Schema(Box::new(SchemaVariant::Array {
+            schema_data: SchemaData {
+                nullable: false,
+                read_only: false,
+                write_only: false,
+                deprecated: false,
+                external_docs: None,
+                example: None,
+                title: None,
+                description: None,
+            },
+            items: ReferenceOr::Item(Box::new(Schema::Schema(Box::new(SchemaVariant::Boolean {
+                schema_data: SchemaData {
+                    nullable: false,
+                    read_only: false,
+                    write_only: false,
+                    deprecated: false,
+                    external_docs: None,
+                    example: None,
+                    title: None,
+                    description: None,
+                },
+            })))),
+            unique_items: false,
+            min_items: None,
+            max_items: Some(0), //@TODO Fix this to use i64
+        }))
+        // json! ({
+        //     "type": ["array", "null"],
+        //     "maxItems": 0_i64,
+        // })
     }
 }
 
 macro_rules! impl_json_schema_tuple {
     ($($ty:ident),*) => {
         impl<$($ty),*> JsonSchema for ($($ty),*) where $($ty: JsonSchema),* {
-            fn json_schema() -> serde_json::Value {
-                json! ({
-                    "type": "array",
-                    "additionalItems": false,
-                    "items": [$($ty::json_schema()),*],
-                })
+            fn json_schema() -> Schema {
+                Schema::Schema(Box::new(SchemaVariant::Array {
+                    schema_data: SchemaData {
+                        nullable: false,
+                        read_only: false,
+                        write_only: false,
+                        deprecated: false,
+                        external_docs: None,
+                        example: None,
+                        title: None,
+                        description: None,
+                    },
+                    items: ReferenceOr::Item(Box::new(Schema::AnyOf {
+                        any_of: vec![$(ReferenceOr::Item($ty::json_schema())),*]
+                    })),
+                    unique_items: false,
+                    min_items: None,
+                    max_items: None,
+                }))
+                // json! ({
+                //     "type": "array",
+                //     "additionalItems": false,
+                //     "items": ,
+                // })
             }
         }
     }
@@ -469,7 +670,7 @@ impl<'a, T> JsonSchema for Cow<'a, T>
 where
     T: ?Sized + Clone + JsonSchema,
 {
-    fn json_schema() -> serde_json::Value {
+    fn json_schema() -> Schema {
         T::json_schema()
     }
 }
@@ -478,7 +679,7 @@ impl<T> JsonSchema for Cell<T>
 where
     T: JsonSchema,
 {
-    fn json_schema() -> serde_json::Value {
+    fn json_schema() -> Schema {
         T::json_schema()
     }
 }
@@ -486,7 +687,7 @@ where
 macro_rules! impl_json_schema_unsized {
     ($($ty:ident,)*) => {$(
         impl<T> JsonSchema for $ty<T> where T: ?Sized + JsonSchema {
-            fn json_schema() -> serde_json::Value {
+            fn json_schema() -> Schema {
                 T::json_schema()
             }
         }
@@ -507,11 +708,23 @@ impl<T> JsonSchema for Vec<T>
 where
     T: JsonSchema,
 {
-    fn json_schema() -> serde_json::Value {
-        json! ({
-            "type": "array",
-            "items": T::json_schema(),
-        })
+    fn json_schema() -> Schema {
+        Schema::Schema(Box::new(SchemaVariant::Array {
+            schema_data: SchemaData {
+                nullable: false,
+                read_only: false,
+                write_only: false,
+                deprecated: false,
+                external_docs: None,
+                example: None,
+                title: None,
+                description: None,
+            },
+            items: ReferenceOr::Item(Box::new(T::json_schema())),
+            unique_items: false,
+            min_items: None,
+            max_items: None,
+        }))
     }
 }
 
@@ -519,11 +732,23 @@ impl<T> JsonSchema for VecDeque<T>
 where
     T: JsonSchema,
 {
-    fn json_schema() -> serde_json::Value {
-        json! ({
-            "type": "array",
-            "items": T::json_schema(),
-        })
+    fn json_schema() -> Schema {
+        Schema::Schema(Box::new(SchemaVariant::Array {
+            schema_data: SchemaData {
+                nullable: false,
+                read_only: false,
+                write_only: false,
+                deprecated: false,
+                external_docs: None,
+                example: None,
+                title: None,
+                description: None,
+            },
+            items: ReferenceOr::Item(Box::new(T::json_schema())),
+            unique_items: false,
+            min_items: None,
+            max_items: None,
+        }))
     }
 }
 
@@ -531,11 +756,23 @@ impl<T> JsonSchema for LinkedList<T>
 where
     T: JsonSchema,
 {
-    fn json_schema() -> serde_json::Value {
-        json! ({
-            "type": "array",
-            "items": T::json_schema(),
-        })
+    fn json_schema() -> Schema {
+        Schema::Schema(Box::new(SchemaVariant::Array {
+            schema_data: SchemaData {
+                nullable: false,
+                read_only: false,
+                write_only: false,
+                deprecated: false,
+                external_docs: None,
+                example: None,
+                title: None,
+                description: None,
+            },
+            items: ReferenceOr::Item(Box::new(T::json_schema())),
+            unique_items: false,
+            min_items: None,
+            max_items: None,
+        }))
     }
 }
 
@@ -543,11 +780,23 @@ impl<T> JsonSchema for BinaryHeap<T>
 where
     T: JsonSchema + Ord,
 {
-    fn json_schema() -> serde_json::Value {
-        json! ({
-            "type": "array",
-            "items": T::json_schema(),
-        })
+    fn json_schema() -> Schema {
+        Schema::Schema(Box::new(SchemaVariant::Array {
+            schema_data: SchemaData {
+                nullable: false,
+                read_only: false,
+                write_only: false,
+                deprecated: false,
+                external_docs: None,
+                example: None,
+                title: None,
+                description: None,
+            },
+            items: ReferenceOr::Item(Box::new(T::json_schema())),
+            unique_items: false,
+            min_items: None,
+            max_items: None,
+        }))
     }
 }
 
@@ -555,42 +804,8 @@ impl<T> JsonSchema for Option<T>
 where
     T: JsonSchema,
 {
-    fn json_schema() -> serde_json::Value {
-        let mut doc = T::json_schema();
-        let null_str = serde_json::Value::String("null".to_string());
-        let mut obj = doc.as_object().expect("must be an object").clone();
-        let (type_key, old_type_spec) = match obj.remove("type") {
-            Some(spec) => ("type", spec),
-            None => {
-                // type wasn't directly constrained;
-                // as a last resort, check if it's an `enum`.
-                if let Some(&mut serde_json::Value::Array(ref mut array)) = doc.get_mut("anyOf") {
-                    array.push(json!({ "type": null_str }));
-                }
-                return doc;
-            }
-        };
-        let new_type_spec = match old_type_spec {
-            serde_json::Value::String(_) => vec![old_type_spec, null_str],
-            serde_json::Value::Array(mut array) => {
-                // duplicate type strings are a schema error :(
-                if !array.iter().any(|item| item == &null_str) {
-                    array.push(null_str);
-                }
-
-                array
-            }
-            _ => panic!(
-                "invalid schema: `{}` isn't a string or array: {:?}",
-                type_key, old_type_spec
-            ),
-        };
-
-        obj.insert(
-            type_key.to_string(),
-            serde_json::Value::Array(new_type_spec),
-        );
-        serde_json::Value::Object(obj.clone())
+    fn json_schema() -> Schema {
+        T::json_schema()
     }
 }
 
@@ -599,12 +814,23 @@ where
     T: JsonSchema + Eq + Hash,
     H: BuildHasher,
 {
-    fn json_schema() -> serde_json::Value {
-        json! ({
-            "type": "array",
-            "uniqueItems": true,
-            "items": T::json_schema(),
-        })
+    fn json_schema() -> Schema {
+        Schema::Schema(Box::new(SchemaVariant::Array {
+            schema_data: SchemaData {
+                nullable: false,
+                read_only: false,
+                write_only: false,
+                deprecated: false,
+                external_docs: None,
+                example: None,
+                title: None,
+                description: None,
+            },
+            items: ReferenceOr::Item(Box::new(T::json_schema())),
+            unique_items: true,
+            min_items: None,
+            max_items: None,
+        }))
     }
 }
 
@@ -612,12 +838,23 @@ impl<T> JsonSchema for BTreeSet<T>
 where
     T: JsonSchema + Ord,
 {
-    fn json_schema() -> serde_json::Value {
-        json! ({
-            "type": "array",
-            "uniqueItems": true,
-            "items": T::json_schema(),
-        })
+    fn json_schema() -> Schema {
+        Schema::Schema(Box::new(SchemaVariant::Array {
+            schema_data: SchemaData {
+                nullable: false,
+                read_only: false,
+                write_only: false,
+                deprecated: false,
+                external_docs: None,
+                example: None,
+                title: None,
+                description: None,
+            },
+            items: ReferenceOr::Item(Box::new(T::json_schema())),
+            unique_items: true,
+            min_items: None,
+            max_items: None,
+        }))
     }
 }
 
@@ -627,11 +864,24 @@ where
     V: JsonSchema,
     H: BuildHasher,
 {
-    fn json_schema() -> serde_json::Value {
-        json! ({
-            "type": "object",
-            "additionalProperties": V::json_schema(),
-        })
+    fn json_schema() -> Schema {
+        Schema::Schema(Box::new(SchemaVariant::Object {
+            schema_data: SchemaData {
+                nullable: false,
+                read_only: false,
+                write_only: false,
+                deprecated: false,
+                external_docs: None,
+                example: None,
+                title: None,
+                description: None,
+            },
+            additional_properties: true,
+            properties: BTreeMap::new(),
+            min_properties: None,
+            max_properties: None,
+            required: vec![],
+        }))
     }
 }
 
@@ -640,44 +890,79 @@ where
     K: ToString + Ord,
     V: JsonSchema,
 {
-    fn json_schema() -> serde_json::Value {
-        json! ({
-            "type": "object",
-            "additionalProperties": V::json_schema(),
-        })
+    fn json_schema() -> Schema {
+        Schema::Schema(Box::new(SchemaVariant::Object {
+            schema_data: SchemaData {
+                nullable: false,
+                read_only: false,
+                write_only: false,
+                deprecated: false,
+                external_docs: None,
+                example: None,
+                title: None,
+                description: None,
+            },
+            additional_properties: true,
+            properties: BTreeMap::new(),
+            min_properties: None,
+            max_properties: None,
+            required: vec![],
+        }))
     }
 }
 
 impl<T: JsonSchema> JsonSchema for Range<T> {
-    fn json_schema() -> serde_json::Value {
-        json! ({
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["start", "end"],
-            "properties": {
-                "start": T::json_schema(),
-                "end":   T::json_schema(),
+    fn json_schema() -> Schema {
+        let mut map = BTreeMap::new();
+        map.insert("start".to_string(), T::json_schema());
+        map.insert("end".to_string(), T::json_schema());
+        Schema::Schema(Box::new(SchemaVariant::Object {
+            schema_data: SchemaData {
+                nullable: false,
+                read_only: false,
+                write_only: false,
+                deprecated: false,
+                external_docs: None,
+                example: None,
+                title: None,
+                description: None,
             },
-        })
+            additional_properties: false,
+            properties: BTreeMap::new(),
+            min_properties: None,
+            max_properties: None,
+            required: vec!["start".to_string(), "end".to_string()],
+        }))
     }
 }
 
 impl<T: JsonSchema> JsonSchema for RangeInclusive<T> {
-    fn json_schema() -> serde_json::Value {
-        json! ({
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["start", "end"],
-            "properties": {
-                "start": T::json_schema(),
-                "end":   T::json_schema(),
+    fn json_schema() -> Schema {
+        let mut map = BTreeMap::new();
+        map.insert("start".to_string(), T::json_schema());
+        map.insert("end".to_string(), T::json_schema());
+        Schema::Schema(Box::new(SchemaVariant::Object {
+            schema_data: SchemaData {
+                nullable: false,
+                read_only: false,
+                write_only: false,
+                deprecated: false,
+                external_docs: None,
+                example: None,
+                title: None,
+                description: None,
             },
-        })
+            additional_properties: false,
+            properties: BTreeMap::new(),
+            min_properties: None,
+            max_properties: None,
+            required: vec!["start".to_string(), "end".to_string()],
+        }))
     }
 }
 
 impl<T> JsonSchema for PhantomData<T> {
-    fn json_schema() -> serde_json::Value {
+    fn json_schema() -> Schema {
         // it's just a unit struct
         <() as JsonSchema>::json_schema()
     }
@@ -689,22 +974,42 @@ impl<T> JsonSchema for PhantomData<T> {
 
 #[cfg(feature = "url")]
 impl JsonSchema for url::Url {
-    fn json_schema() -> serde_json::Value {
-        json! ({
-            "type": "string",
-            "format": "uri",
-            // TODO(H2CO3): validation regex pattern?
-        })
+    fn json_schema() -> Schema {
+        Schema::Schema(Box::new(SchemaVariant::String {
+            schema_data: SchemaData {
+                nullable: false,
+                read_only: false,
+                write_only: false,
+                deprecated: false,
+                external_docs: None,
+                example: None,
+                title: None,
+                description: None,
+            },
+            pattern: None,
+            format: VariantOrUnknownOrEmpty::Unknown("uri".to_string()),
+            enumeration: vec![],
+        }))
     }
 }
 
 #[cfg(feature = "uuid")]
 impl JsonSchema for uuid::Uuid {
-    fn json_schema() -> serde_json::Value {
-        json! ({
-            "type": "string",
-            "format": "uuid4"
-            "pattern": "^[[:xdigit:]]{8}-[[:xdigit:]]{4}-[[:xdigit:]]{4}-[[:xdigit:]]{4}-[[:xdigit:]]{12}$",
-        })
+    fn json_schema() -> Schema {
+        Schema::Schema(Box::new(SchemaVariant::String {
+                    schema_data: SchemaData {
+                        nullable: false,
+                        read_only: false,
+                        write_only: false,
+                        deprecated: false,
+                        external_docs: None,
+                        example: None,
+                        title: None,
+                        description: None,
+                    },
+                    pattern: Some("^[[:xdigit:]]{8}-[[:xdigit:]]{4}-[[:xdigit:]]{4}-[[:xdigit:]]{4}-[[:xdigit:]]{12}$".to_string()),
+                    format: VariantOrUnknownOrEmpty::Unknown("uri".to_string()),
+                    enumeration: vec![]
+                }))
     }
 }
