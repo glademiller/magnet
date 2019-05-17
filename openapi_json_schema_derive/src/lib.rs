@@ -97,7 +97,7 @@ fn impl_json_schema(input: TokenStream) -> Result<TokenStream> {
     let (impl_gen, ty_gen, where_cls) = generics.split_and_augment_for_impl();
     let generated = quote! {
         impl #impl_gen ::openapi_json_schema::JsonSchema for #ty #ty_gen #where_cls {
-            fn json_schema() -> serde_json::Value {
+            fn json_schema() -> openapiv3::Schema {
                 #impl_ast
             }
         }

@@ -246,16 +246,7 @@ pub trait JsonSchema {
 impl JsonSchema for bool {
     fn json_schema() -> Schema {
         Schema::Schema(Box::new(SchemaVariant::Boolean {
-            schema_data: SchemaData {
-                nullable: false,
-                read_only: false,
-                write_only: false,
-                deprecated: false,
-                external_docs: None,
-                example: None,
-                title: None,
-                description: None,
-            },
+            schema_data: SchemaData::default(),
         }))
         // json! ({ "type": "boolean" })
     }
@@ -268,16 +259,7 @@ macro_rules! impl_json_schema_int {
             #[allow(clippy::cast_possible_wrap, clippy::cast_lossless)]
             fn json_schema() -> Schema {
                 Schema::Schema(Box::new(SchemaVariant::Integer {
-                    schema_data: SchemaData {
-                        nullable: false,
-                        read_only: false,
-                        write_only: false,
-                        deprecated: false,
-                        external_docs: None,
-                        example: None,
-                        title: None,
-                        description: None,
-                    },
+                    schema_data: SchemaData::default(),
                     format: VariantOrUnknownOrEmpty::Unknown($format.to_string()),
                     multiple_of: None,
                     exclusive_minimum: false,
@@ -346,16 +328,7 @@ impl JsonSchema for usize {
 impl JsonSchema for usize {
     fn json_schema() -> Schema {
         Schema::Schema(Box::new(SchemaVariant::Integer {
-            schema_data: SchemaData {
-                nullable: false,
-                read_only: false,
-                write_only: false,
-                deprecated: false,
-                external_docs: None,
-                example: None,
-                title: None,
-                description: None,
-            },
+            schema_data: SchemaData::default(),
             format: VariantOrUnknownOrEmpty::Item(IntegerFormat::Int64),
             multiple_of: None,
             exclusive_minimum: false,
@@ -383,16 +356,7 @@ impl JsonSchema for usize {
 impl JsonSchema for isize {
     fn json_schema() -> Schema {
         Schema::Schema(Box::new(SchemaVariant::Integer {
-            schema_data: SchemaData {
-                nullable: false,
-                read_only: false,
-                write_only: false,
-                deprecated: false,
-                external_docs: None,
-                example: None,
-                title: None,
-                description: None,
-            },
+            schema_data: SchemaData::default(),
             format: VariantOrUnknownOrEmpty::Item(IntegerFormat::Int64),
             multiple_of: None,
             exclusive_minimum: false,
@@ -414,16 +378,7 @@ macro_rules! impl_json_schema_float {
         impl JsonSchema for $ty {
             fn json_schema() -> Schema {
                 Schema::Schema(Box::new(SchemaVariant::Number {
-                    schema_data: SchemaData {
-                        nullable: false,
-                        read_only: false,
-                        write_only: false,
-                        deprecated: false,
-                        external_docs: None,
-                        example: None,
-                        title: None,
-                        description: None,
-                    },
+                    schema_data: SchemaData::default(),
                     format: VariantOrUnknownOrEmpty::Unknown($format.to_string()),
                     multiple_of: None,
                     exclusive_minimum: false,
@@ -448,16 +403,7 @@ macro_rules! impl_json_schema_string {
         impl JsonSchema for $ty {
             fn json_schema() -> Schema {
                 Schema::Schema(Box::new(SchemaVariant::String {
-                    schema_data: SchemaData {
-                        nullable: false,
-                        read_only: false,
-                        write_only: false,
-                        deprecated: false,
-                        external_docs: None,
-                        example: None,
-                        title: None,
-                        description: None,
-                    },
+                    schema_data: SchemaData::default(),
                     pattern: None,
                     format: VariantOrUnknownOrEmpty::Empty,
                     enumeration: vec![]
@@ -507,16 +453,7 @@ where
 {
     fn json_schema() -> Schema {
         Schema::Schema(Box::new(SchemaVariant::Array {
-            schema_data: SchemaData {
-                nullable: false,
-                read_only: false,
-                write_only: false,
-                deprecated: false,
-                external_docs: None,
-                example: None,
-                title: None,
-                description: None,
-            },
+            schema_data: SchemaData::default(),
             items: ReferenceOr::Item(Box::new(T::json_schema())),
             unique_items: false,
             min_items: None,
@@ -535,16 +472,7 @@ macro_rules! impl_json_schema_array {
             #[allow(trivial_numeric_casts)]
             fn json_schema() -> Schema {
                 Schema::Schema(Box::new(SchemaVariant::Array {
-                    schema_data: SchemaData {
-                        nullable: false,
-                        read_only: false,
-                        write_only: false,
-                        deprecated: false,
-                        external_docs: None,
-                        example: None,
-                        title: None,
-                        description: None,
-                    },
+                    schema_data: SchemaData::default(),
                     items: ReferenceOr::Item(Box::new(T::json_schema())),
                     unique_items: false,
                     min_items: Some($size as usize), //@TODO  Fix this to use i64
@@ -580,27 +508,9 @@ impl_json_schema_array! {
 impl JsonSchema for () {
     fn json_schema() -> Schema {
         Schema::Schema(Box::new(SchemaVariant::Array {
-            schema_data: SchemaData {
-                nullable: false,
-                read_only: false,
-                write_only: false,
-                deprecated: false,
-                external_docs: None,
-                example: None,
-                title: None,
-                description: None,
-            },
+            schema_data: SchemaData::default(),
             items: ReferenceOr::Item(Box::new(Schema::Schema(Box::new(SchemaVariant::Boolean {
-                schema_data: SchemaData {
-                    nullable: false,
-                    read_only: false,
-                    write_only: false,
-                    deprecated: false,
-                    external_docs: None,
-                    example: None,
-                    title: None,
-                    description: None,
-                },
+                schema_data: SchemaData::default(),
             })))),
             unique_items: false,
             min_items: None,
@@ -618,16 +528,7 @@ macro_rules! impl_json_schema_tuple {
         impl<$($ty),*> JsonSchema for ($($ty),*) where $($ty: JsonSchema),* {
             fn json_schema() -> Schema {
                 Schema::Schema(Box::new(SchemaVariant::Array {
-                    schema_data: SchemaData {
-                        nullable: false,
-                        read_only: false,
-                        write_only: false,
-                        deprecated: false,
-                        external_docs: None,
-                        example: None,
-                        title: None,
-                        description: None,
-                    },
+                    schema_data: SchemaData::default(),
                     items: ReferenceOr::Item(Box::new(Schema::AnyOf {
                         any_of: vec![$(ReferenceOr::Item($ty::json_schema())),*]
                     })),
@@ -710,16 +611,7 @@ where
 {
     fn json_schema() -> Schema {
         Schema::Schema(Box::new(SchemaVariant::Array {
-            schema_data: SchemaData {
-                nullable: false,
-                read_only: false,
-                write_only: false,
-                deprecated: false,
-                external_docs: None,
-                example: None,
-                title: None,
-                description: None,
-            },
+            schema_data: SchemaData::default(),
             items: ReferenceOr::Item(Box::new(T::json_schema())),
             unique_items: false,
             min_items: None,
@@ -734,16 +626,7 @@ where
 {
     fn json_schema() -> Schema {
         Schema::Schema(Box::new(SchemaVariant::Array {
-            schema_data: SchemaData {
-                nullable: false,
-                read_only: false,
-                write_only: false,
-                deprecated: false,
-                external_docs: None,
-                example: None,
-                title: None,
-                description: None,
-            },
+            schema_data: SchemaData::default(),
             items: ReferenceOr::Item(Box::new(T::json_schema())),
             unique_items: false,
             min_items: None,
@@ -758,16 +641,7 @@ where
 {
     fn json_schema() -> Schema {
         Schema::Schema(Box::new(SchemaVariant::Array {
-            schema_data: SchemaData {
-                nullable: false,
-                read_only: false,
-                write_only: false,
-                deprecated: false,
-                external_docs: None,
-                example: None,
-                title: None,
-                description: None,
-            },
+            schema_data: SchemaData::default(),
             items: ReferenceOr::Item(Box::new(T::json_schema())),
             unique_items: false,
             min_items: None,
@@ -782,16 +656,7 @@ where
 {
     fn json_schema() -> Schema {
         Schema::Schema(Box::new(SchemaVariant::Array {
-            schema_data: SchemaData {
-                nullable: false,
-                read_only: false,
-                write_only: false,
-                deprecated: false,
-                external_docs: None,
-                example: None,
-                title: None,
-                description: None,
-            },
+            schema_data: SchemaData::default(),
             items: ReferenceOr::Item(Box::new(T::json_schema())),
             unique_items: false,
             min_items: None,
@@ -816,16 +681,7 @@ where
 {
     fn json_schema() -> Schema {
         Schema::Schema(Box::new(SchemaVariant::Array {
-            schema_data: SchemaData {
-                nullable: false,
-                read_only: false,
-                write_only: false,
-                deprecated: false,
-                external_docs: None,
-                example: None,
-                title: None,
-                description: None,
-            },
+            schema_data: SchemaData::default(),
             items: ReferenceOr::Item(Box::new(T::json_schema())),
             unique_items: true,
             min_items: None,
@@ -840,16 +696,7 @@ where
 {
     fn json_schema() -> Schema {
         Schema::Schema(Box::new(SchemaVariant::Array {
-            schema_data: SchemaData {
-                nullable: false,
-                read_only: false,
-                write_only: false,
-                deprecated: false,
-                external_docs: None,
-                example: None,
-                title: None,
-                description: None,
-            },
+            schema_data: SchemaData::default(),
             items: ReferenceOr::Item(Box::new(T::json_schema())),
             unique_items: true,
             min_items: None,
@@ -866,16 +713,7 @@ where
 {
     fn json_schema() -> Schema {
         Schema::Schema(Box::new(SchemaVariant::Object {
-            schema_data: SchemaData {
-                nullable: false,
-                read_only: false,
-                write_only: false,
-                deprecated: false,
-                external_docs: None,
-                example: None,
-                title: None,
-                description: None,
-            },
+            schema_data: SchemaData::default(),
             additional_properties: true,
             properties: BTreeMap::new(),
             min_properties: None,
@@ -892,16 +730,7 @@ where
 {
     fn json_schema() -> Schema {
         Schema::Schema(Box::new(SchemaVariant::Object {
-            schema_data: SchemaData {
-                nullable: false,
-                read_only: false,
-                write_only: false,
-                deprecated: false,
-                external_docs: None,
-                example: None,
-                title: None,
-                description: None,
-            },
+            schema_data: SchemaData::default(),
             additional_properties: true,
             properties: BTreeMap::new(),
             min_properties: None,
@@ -917,16 +746,7 @@ impl<T: JsonSchema> JsonSchema for Range<T> {
         map.insert("start".to_string(), T::json_schema());
         map.insert("end".to_string(), T::json_schema());
         Schema::Schema(Box::new(SchemaVariant::Object {
-            schema_data: SchemaData {
-                nullable: false,
-                read_only: false,
-                write_only: false,
-                deprecated: false,
-                external_docs: None,
-                example: None,
-                title: None,
-                description: None,
-            },
+            schema_data: SchemaData::default(),
             additional_properties: false,
             properties: BTreeMap::new(),
             min_properties: None,
@@ -942,16 +762,7 @@ impl<T: JsonSchema> JsonSchema for RangeInclusive<T> {
         map.insert("start".to_string(), T::json_schema());
         map.insert("end".to_string(), T::json_schema());
         Schema::Schema(Box::new(SchemaVariant::Object {
-            schema_data: SchemaData {
-                nullable: false,
-                read_only: false,
-                write_only: false,
-                deprecated: false,
-                external_docs: None,
-                example: None,
-                title: None,
-                description: None,
-            },
+            schema_data: SchemaData::default(),
             additional_properties: false,
             properties: BTreeMap::new(),
             min_properties: None,

@@ -52,26 +52,28 @@ fn impl_json_schema_named_fields(
     let defs: Vec<_> = fields.iter().map(field_def).collect::<Result<_>>()?;
     let tokens = if let Some(TagExtra { tag, variant }) = extra {
         quote! {
-            json! ({
-                "type": "object",
-                "additionalProperties": false,
-                "required": [ #tag, #(#properties,)* ],
-                "properties": {
-                    #tag: { "enum": [ #variant ] },
-                    #(#properties: #defs,)*
-                },
-            })
+            let mut props = BTreeMap::new();
+            //#(props.insert(#properties, #defs,));*
+            props.insert(#tag, openapiv3::Schema::Schema(Box::new(openapiv3::SchemaVariant::String {
+                enumeration: [#variant],
+                ..Default::default()
+            })))
+            openapiv3::Schema::Schema(Box::new(openapiv3::SchemaVariant::Object {
+                required: vec![#tag, #(#properties,)* ],
+                properties: props
+                ..Default::default()
+            }))
         }
     } else {
         quote! {
-            json! ({
-                "type": "object",
-                "additionalProperties": false,
-                "required": [ #(#properties,)* ],
-                "properties": {
-                    #(#properties: #defs,)*
-                },
-            })
+            let mut props = BTreeMap::new();
+            //#(props.insert(#properties, #defs,));*
+
+            openapiv3::Schema::Schema(Box::new(openapiv3::SchemaVariant::Object {
+                required: vec![#(#properties,)* ],
+                properties: props
+                ..Default::default()
+            }))
         }
     };
 

@@ -189,16 +189,7 @@ fn extend_object_schema_with_tag(
                 tag.into(),
                 openapiv3::ReferenceOr::Item(Box::new(openapiv3::Schema::Schema(Box::new(
                     openapiv3::SchemaVariant::String {
-                        schema_data: openapiv3::SchemaData {
-                            nullable: false,
-                            read_only: false,
-                            write_only: false,
-                            deprecated: false,
-                            external_docs: None,
-                            example: None,
-                            title: None,
-                            description: None,
-                        },
+                        schema_data: openapiv3::SchemaData::default(),
                         pattern: None,
                         format: openapiv3::VariantOrUnknownOrEmpty::Empty,
                         enumeration: vec![variant.into()],

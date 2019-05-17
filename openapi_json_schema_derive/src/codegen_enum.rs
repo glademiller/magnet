@@ -25,9 +25,9 @@ pub fn impl_json_schema_enum(attrs: Vec<Attribute>, ast: DataEnum) -> Result<Tok
         .collect::<Result<_>>()?;
 
     let tokens = quote! {
-        json! ({
-            "anyOf": [ #(#variants,)* ]
-        })
+        openapiv3::Schema::AnyOf {
+            any_of: vec![#(#variants,)*]
+        }
     };
 
     Ok(tokens)
@@ -92,14 +92,16 @@ fn variant_schema(
 /// if the containing enum is adjacently tagged.
 fn adjacently_tagged_unit_variant_schema(variant_name: &str, tag: &str) -> Result<TokenStream> {
     let tokens = quote! {
-        json! ({
-            "type": "object",
-            "additionalProperties": false,
-            "required": [ #tag ],
-            "properties": {
-                #tag: { "enum": [ #variant_name ] },
-            },
-        })
+        let mut props = BTreeMap::new();
+        props.insert(#tag.to_string(), openapiv3::Schema::Schema(Box::new(openapiv3::SchemaVariant::String {
+            enumeration: [#variant_name],
+            ..Default::default()
+        })));
+        openapiv3::Schema::Schema(Box::new(openapiv3::SchemaVariant::Object {
+            required: vec![#tag],
+            properties: props
+            ..Default::default()
+        }))
     };
     Ok(tokens)
 }
@@ -115,15 +117,17 @@ fn adjacently_tagged_other_variant_schema(
 ) -> Result<TokenStream> {
     let variant_schema = impl_json_schema_fields(attrs, fields)?;
     let tokens = quote! {
-        json! ({
-            "type": "object",
-            "additionalProperties": false,
-            "required": [ #tag, #content ],
-            "properties": {
-                #tag: { "enum": [ #variant_name ] },
-                #content: #variant_schema,
-            },
-        })
+        let mut props = BTreeMap::new();
+        props.insert(#content.to_string(), #variant_schema);
+        props.insert(#tag.to_string(), openapiv3::Schema::Schema(Box::new(openapiv3::SchemaVariant::String {
+            enumeration: [#variant_name],
+            ..Default::default()
+        })));
+        openapiv3::Schema::Schema(Box::new(openapiv3::SchemaVariant::Object {
+            required: vec![#variant_name, #tag],
+            properties: props
+            ..Default::default()
+        }))
     };
     Ok(tokens)
 }
@@ -152,9 +156,10 @@ fn internally_tagged_other_variant_schema(
 /// if the containing enum is externally tagged.
 fn externally_tagged_unit_variant_schema(variant_name: &str) -> Result<TokenStream> {
     let tokens = quote! {
-        json! ({
-            "enum": [ #variant_name ],
-        })
+        openapiv3::Schema::Schema(Box::new(openapiv3::SchemaVariant::String {
+            enumeration: [#variant_name],
+            ..Default::default()
+        }))
     };
     Ok(tokens)
 }
@@ -169,14 +174,13 @@ fn externally_tagged_other_variant_schema(
     let variant_schema = impl_json_schema_fields(attrs, fields)?;
 
     let tokens = quote! {
-        json! ({
-            "type": "object",
-            "additionalProperties": false,
-            "required": [ #variant_name ],
-            "properties": {
-                #variant_name: #variant_schema
-            },
-        })
+        let mut props = BTreeMap::new();
+        props.insert(#variant_name.to_string(), #variant_schema);
+        openapiv3::Schema::Schema(Box::new(openapiv3::SchemaVariant::Object {
+            required: vec![#variant_name],
+            properties: props
+            ..Default::default()
+        }))
     };
     Ok(tokens)
 }
